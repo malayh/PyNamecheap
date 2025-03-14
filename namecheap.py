@@ -2,6 +2,9 @@ import sys
 import time
 import requests  # pip install requests
 from xml.etree.ElementTree import fromstring
+import logging
+
+logger = logging.getLogger("namecheap")
 
 inPy3k = sys.version_info[0] == 3
 
@@ -118,16 +121,16 @@ class Api(object):
                 # Here we provide 1 error code which is not present in official docs
                 raise ApiError('1', 'Did not receive 200 (Ok) response')
             if self.debug:
-                print('Received status %d ... retrying ...' % (r.status_code))
+                logger.debug('Received status %d ... retrying ...' % (r.status_code))
             time.sleep(self.attempts_delay)
             attempts_left -= 1
 
         if self.debug:
-            print("--- Request ---")
-            print(r.url)
-            print(extra_payload)
-            print("--- Response ---")
-            print(r.text)
+            logger.debug("--- Request ---")
+            logger.debug(r.url)
+            logger.debug(extra_payload)
+            logger.debug("--- Response ---")
+            logger.debug(r.text)
         xml = fromstring(r.text)
 
         if xml.attrib['Status'] == 'ERROR':
@@ -372,12 +375,12 @@ class Api(object):
         """
         host_records_remote = self.domains_dns_getHosts(domain)
 
-        print("Remote: %i" % len(host_records_remote))
+        logger.debug("Remote: %i" % len(host_records_remote))
 
         host_records_remote.append(host_record)
         host_records_remote = [self._elements_names_fix(x) for x in host_records_remote]
 
-        print("To set: %i" % len(host_records_remote))
+        logger.debug("To set: %i" % len(host_records_remote))
 
         extra_payload = self._list_of_dictionaries_to_numbered_payload(host_records_remote)
         sld, tld = domain.split(".")
@@ -402,7 +405,7 @@ class Api(object):
         """
         host_records_remote = self.domains_dns_getHosts(domain)
 
-        print("Remote: %i" % len(host_records_remote))
+        logger.debug("Remote: %i" % len(host_records_remote))
 
         host_records_new = []
         for r in host_records_remote:
@@ -418,7 +421,7 @@ class Api(object):
 
         host_records_new = [self._elements_names_fix(x) for x in host_records_new]
 
-        print("To set: %i" % len(host_records_new))
+        logger.debug("To set: %i" % len(host_records_new))
 
         # Check that we delete not more than 1 record at a time
         if len(host_records_remote) != len(host_records_new) + 1:
